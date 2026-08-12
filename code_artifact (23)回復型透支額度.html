@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>回復型透支額度｜主流程與互動體驗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy-dark: #0B1C33;
+  --navy: #0F2B48;
+  --navy-light: #1A3E66;
+  --blue-brand: #3576E8;
+  --blue-soft: #EEF4FE;
+  --green-soft: #EBF9F1;
+  --green-border: #C2EBD3;
+  --green-text: #197C52;
+  --red-soft: #FDF0ED;
+  --red-border: #F8D3CB;
+  --red-text: #D03B29;
+  --amber-soft: #FFF7E6;
+  --amber-border: #FBE5B8;
+  --amber-text: #9E6B00;
+  --bg-page: #F7F5EE;
+  --card-bg: #FFFFFF;
+  --ink: #1F2329;
+  --muted: #626A74;
+  --line: #E5E0D8;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background-color: var(--bg-page);
+  color: var(--ink);
+  font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+/* Base Wrapper */
+.wrap { width: min(100%, 760px); margin: 0 auto; padding: 24px 16px 60px; }
+
+/* Section Title */
+.sec-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 32px 0 20px;
+}
+.sec-title::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 22px;
+  background-color: var(--blue-brand);
+  border-radius: 4px;
+}
+
+/* Card Styling */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(15, 43, 72, 0.03);
+}
+
+.hero {
+  background: linear-gradient(145deg, var(--navy-dark) 0%, var(--navy) 100%);
+  color: #fff;
+  padding: 36px 24px;
+  border-radius: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; color: #B3CFFC;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+  padding: 4px 14px; border-radius: 99px; margin-bottom: 12px;
+}
+.hero h1 { font-family: 'Noto Serif TC', serif; font-size: 28px; margin: 0 0 10px; font-weight: 900; }
+.hero p { color: #D1E1F8; font-size: 14px; margin: 0; }
+
+/* Calculator UI */
+.presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 20px; }
+.btn-preset {
+  border: 1px solid var(--line); background: #fff; border-radius: 12px;
+  padding: 10px; font-size: 14px; font-weight: 700; color: var(--navy); cursor: pointer; transition: all .2s;
+}
+.btn-preset.active { background: var(--blue-soft); border-color: var(--blue-brand); color: var(--blue-brand); }
+
+.control-group { margin-bottom: 16px; }
+.control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.control-title { font-size: 14px; font-weight: 700; }
+.control-value { font-size: 20px; font-weight: 800; color: var(--navy); }
+input[type=range] { width: 100%; accent-color: var(--blue-brand); height: 32px; cursor: pointer; }
+
+.chart-container {
+  display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: center;
+  background: #FAFAFA; border-radius: 16px; padding: 20px; margin: 16px 0; border: 1px solid #EFEFEF;
+}
+@media (max-width: 560px) { .chart-container { grid-template-columns: 1fr; text-align: center; } }
+.pie-wrap { position: relative; width: 160px; height: 160px; margin: auto; }
+.pie-chart {
+  width: 100%; height: 100%; border-radius: 50%;
+  transition: background .35s ease; position: relative;
+}
+.pie-chart::after {
+  content: ""; position: absolute; inset: 28%; background: #fff; border-radius: 50%;
+}
+.pie-center {
+  position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; pointer-events: none;
+}
+.pie-center b { font-size: 18px; color: var(--navy); }
+.pie-center span { font-size: 11px; color: var(--muted); }
+
+.legend-list { display: grid; gap: 8px; }
+.legend-item { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 8px 12px; background: #fff; border-radius: 10px; border: 1px solid var(--line); }
+.legend-left { display: flex; align-items: center; gap: 8px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+.timeline-section { position: relative; }
+
+/* Continuous Vertical Line */
+.tl-container { position: relative; padding-left: 56px; }
+.tl-container::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 24px;
+  bottom: 24px;
+  width: 3px;
+  background-color: var(--blue-brand);
+  z-index: 1;
+}
+
+/* Timeline Item */
+.tl-step {
+  position: relative;
+  margin-bottom: 16px;
+}
+.tl-step:last-child { margin-bottom: 0; }
+
+/* Blue Circular Number Badge */
+.tl-num {
+  position: absolute;
+  left: -56px;
+  top: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2px solid var(--blue-brand);
+  color: var(--blue-brand);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 0 0 4px rgba(53, 118, 232, 0.15);
+}
+
+/* White Content Box */
+.tl-card {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+}
+
+/* Special Highlight Card for Step 4 */
+.tl-card.highlight-green {
+  background: var(--green-soft);
+  border-color: var(--green-border);
+}
+
+/* Icon Box inside step card */
+.icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background-color: #F3F1EA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.tl-card.highlight-green .icon-box {
+  background-color: #D3F2DF;
+}
+
+.tl-info h3 {
+  margin: 0 0 2px 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.tl-card.highlight-green .tl-info h3 {
+  color: var(--green-text);
+}
+.tl-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.tl-card.highlight-green .tl-info p {
+  color: #2D6A4F;
+}
+
+.decision-banner {
+  background: linear-gradient(180deg, var(--navy-dark) 0%, var(--navy) 100%);
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+  color: #fff;
+  margin: 28px 0 20px;
+  box-shadow: 0 6px 20px rgba(11, 28, 51, 0.15);
+}
+.decision-banner h2 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 20px;
+  margin: 0 0 16px 0;
+  font-weight: 900;
+}
+
+/* Decision Segment Switch Button Container */
+.switch-capsule {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px;
+  border-radius: 99px;
+  gap: 4px;
+}
+.switch-btn {
+  border: none;
+  background: transparent;
+  color: #D3E2F8;
+  padding: 8px 24px;
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.switch-btn.active {
+  background: #FFFFFF;
+  color: var(--navy);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Branch NO Result Notice Box */
+.notice-no {
+  background: var(--red-soft);
+  border: 1px solid var(--red-border);
+  border-radius: 18px;
+  padding: 24px;
+  text-align: center;
+  margin-top: 16px;
+  animation: fadeIn 0.3s ease;
+}
+.notice-no .lock-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  display: block;
+}
+.notice-no h3 {
+  margin: 0 0 6px 0;
+  color: var(--red-text);
+  font-size: 17px;
+  font-weight: 800;
+}
+.notice-no p {
+  margin: 0;
+  color: #61271E;
+  font-size: 13.5px;
+}
+
+/* Branch YES Animated Container */
+.branch-yes-container {
+  animation: fadeIn 0.3s ease;
+}
+
+.navy-info-card {
+  background: var(--navy-dark);
+  color: #fff;
+  border-radius: 18px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 28px 0 24px;
+}
+.navy-info-card .bank-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.navy-info-card h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+.navy-info-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #B2C8E6;
+}
+
+/* Two Column Feature Grid */
+.grid-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 640px) {
+  .grid-features { grid-template-columns: 1fr; }
+}
+
+.feature-card {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 4px 16px rgba(15, 43, 72, 0.02);
+}
+.feature-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.feature-card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--navy);
+  font-family: 'Noto Serif TC', serif;
+}
+
+.feature-list {
+  display: flex;
+  flex-direction: column;
+}
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.feature-item:last-child {
+  border-bottom: none;
+}
+.feature-icon-sq {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background-color: #EBF7F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  color: var(--green-text);
+  font-weight: 800;
+}
+.feature-icon-sq.blue-type {
+  background-color: var(--blue-soft);
+  color: var(--blue-brand);
+}
+
+/* Yellow Bulb Notice Box */
+.bulb-notice {
+  background-color: var(--amber-soft);
+  border: 1px solid var(--amber-border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  font-size: 12.5px;
+  color: #6E4B00;
+  line-height: 1.5;
+}
+.bulb-notice .bulb-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* FAQ Section */
+.faq-item {
+  border-bottom: 1px solid var(--line);
+}
+.faq-item:last-child { border-bottom: none; }
+.faq-btn {
+  width: 100%; text-align: left; background: none; border: none; padding: 16px 0;
+  font-size: 15px; font-weight: 700; color: var(--navy); cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.faq-ans { display: none; padding-bottom: 16px; font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+.faq-item.open .faq-ans { display: block; }
+
+/* Sticky Footer CTA */
+.sticky-footer {
+  position: sticky; bottom: 0; background: rgba(247, 245, 238, 0.94);
+  backdrop-filter: blur(10px);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line); margin-top: 32px; z-index: 10;
+}
+.cta-btn {
+  width: 100%; max-width: 760px; margin: auto; display: block; border: 0; border-radius: 14px;
+  background: var(--blue-brand); color: #fff; padding: 15px; font-size: 16px; font-weight: 800;
+  cursor: pointer; text-align: center; box-shadow: 0 4px 14px rgba(53, 118, 232, 0.3);
+  transition: transform 0.15s;
+}
+.cta-btn:active { transform: scale(0.99); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-tag">永豐銀行房貸附加功能・7年期</div>
+    <h1>還掉的房貸本金<br>自動轉為彈性備用金</h1>
+    <p>提前還款降低負擔，需要資金時隨時循環動用</p>
+  </header>
+
+  <!-- 試算器卡片 -->
+  <section class="card" id="calculator">
+    <div style="font-family:'Noto Serif TC', serif; font-size:18px; font-weight:900; color:var(--navy); margin-bottom:12px;">
+      🧮 額度與利息模擬試算
+    </div>
+
+    <span style="font-size:13px; font-weight:700; color:var(--muted); display:block; margin-bottom:8px;">
+      ① 請選擇「提前償還貸款本金」金額：
+    </span>
+    <div class="presets">
+      <button class="btn-preset" onclick="setRepay(50)">50 萬</button>
+      <button class="btn-preset active" onclick="setRepay(100)">100 萬</button>
+      <button class="btn-preset" onclick="setRepay(200)">200 萬</button>
+      <button class="btn-preset" onclick="setRepay(500)">500 萬</button>
+    </div>
+
+    <div class="control-group">
+      <div class="control-header">
+        <span class="control-title">償還本金金額（原房貸 800 萬）</span>
+        <span class="control-value"><span id="repayText">100</span> 萬</span>
+      </div>
+      <input id="repayRange" type="range" min="10" max="800" value="100" step="10">
+    </div>
+
+    <div class="control-group">
+      <div class="control-header">
+        <span class="control-title">② 模擬動用「透支額度」金額</span>
+        <span class="control-value" style="color:var(--blue-brand);"><span id="usedText">30</span> 萬</span>
+      </div>
+      <input id="usedRange" type="range" min="0" max="100" value="30" step="10">
+    </div>
+
+    <!-- 償還本金雙重效益摘要卡（連動試算） -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin: 18px 0 16px;">
+      <div style="background:var(--blue-soft); border:1px solid #C3D9FF; border-radius:14px; padding:14px; text-align:center;">
+        <span style="font-size:12px; font-weight:700; color:var(--navy-light); display:block; margin-bottom:4px;">📉 原房貸月付金（約少繳）</span>
+        <b id="monthlySaveText" style="font-size:20px; font-weight:900; color:var(--blue-brand);">-3,951 元/月</b>
+        <span style="font-size:11px; color:var(--muted); display:block; margin-top:2px;">以30年期/利率2.5%試算</span>
+      </div>
+      <div style="background:var(--green-soft); border:1px solid var(--green-border); border-radius:14px; padding:14px; text-align:center;">
+        <span style="font-size:12px; font-weight:700; color:var(--green-text); display:block; margin-bottom:4px;">🛡️ 自動轉備用金額度</span>
+        <b id="benefitLimitText" style="font-size:20px; font-weight:900; color:var(--green-text);">+100 萬元</b>
+        <span style="font-size:11px; color:#2D6A4F; display:block; margin-top:2px;">沒動用完全不計息</span>
+      </div>
+    </div>
+
+    <!-- 圓餅圖與數據列 -->
+    <div class="chart-container">
+      <div class="pie-wrap">
+        <div class="pie-chart" id="pieChart"></div>
+        <div class="pie-center">
+          <b>800 萬</b>
+          <span>原始總額</span>
+        </div>
+      </div>
+      <div class="legend-list">
+        <div class="legend-item">
+          <div class="legend-left"><i class="legend-dot" style="background:#3576E8"></i>房貸剩餘本金</div>
+          <b id="valLoan">700 萬</b>
+        </div>
+        <div class="legend-item">
+          <div class="legend-left"><i class="legend-dot" style="background:#20B2AA"></i>可動用透支額度</div>
+          <b id="valAvailable">70 萬</b>
+        </div>
+        <div class="legend-item">
+          <div class="legend-left"><i class="legend-dot" style="background:#E05A47"></i>已動用透支額度</div>
+          <b id="valUsed">30 萬</b>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--amber-soft); border:1px solid var(--amber-border); border-radius:14px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <b style="color:var(--amber-text); font-size:14px;">⚡ 按日計息・僅動用部分算利息</b>
+        <span style="font-size:12px; color:#855B00; display:block;">示意年利率 3.1% 試算</span>
+      </div>
+      <div style="font-size:22px; font-weight:900; color:var(--amber-text);" id="dailyInterest">
+        約 25 元<span style="font-size:12px; font-weight:normal;">/日</span>
+      </div>
+    </div>
+
+    <div style="font-size:11.5px; color:var(--muted); text-align:center; margin-top:12px;">
+      * 利率年期額度僅供作示意範例，核貸條件依實際審核核定為主。
+    </div>
+  </section>
+
+  <h2 class="sec-title">丨 主流程</h2>
+
+  <div class="timeline-section">
+    <div class="tl-container">
+
+      <!-- Step 1 -->
+      <div class="tl-step">
+        <div class="tl-num">1</div>
+        <div class="tl-card">
+          <div class="icon-box">💵</div>
+          <div class="tl-info">
+            <h3>償還部分貸款本金</h3>
+            <p>例如提前償還 100 萬元</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="tl-step">
+        <div class="tl-num">2</div>
+        <div class="tl-card">
+          <div class="icon-box">📉</div>
+          <div class="tl-info">
+            <h3>貸款餘額下降</h3>
+            <p>本金減少 → 每月還款金額降低</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="tl-step">
+        <div class="tl-num">3</div>
+        <div class="tl-card">
+          <div class="icon-box">🕒</div>
+          <div class="tl-info">
+            <h3>隔一個營業日早上</h3>
+            <p>系統於次一營業日進行轉換作業</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 (Green Highlight Box) -->
+      <div class="tl-step">
+        <div class="tl-num">4</div>
+        <div class="tl-card highlight-green">
+          <div class="icon-box">🔄</div>
+          <div class="tl-info">
+            <h3>已還款金額轉為「回復型透支額度」</h3>
+            <p>100 萬元本金 → 成為可重複動用的額度</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 決策卡片 -->
+  <div class="decision-banner">
+    <h2>是否動用透支額度？</h2>
+    <div class="switch-capsule">
+      <button class="switch-btn active" id="btnDecNo" onclick="setDecision(false)">否，先保留</button>
+      <button class="switch-btn" id="btnDecYes" onclick="setDecision(true)">是，我要動用</button>
+    </div>
+  </div>
+
+  <!-- 分歧 A：否，先保留 -->
+  <div id="branchNo" class="notice-no">
+    <span class="lock-icon">🔒</span>
+    <h3>不產生利息（額度保留）</h3>
+    <p>額度靜靜待命，沒動用就完全不計息，隨時可以改變主意。</p>
+  </div>
+
+  <!-- 分歧 B：是，我要動用 (Steps 5-8) -->
+  <div id="branchYes" class="branch-yes-container" style="display:none;">
+    <div class="tl-container">
+
+      <!-- Step 5 -->
+      <div class="tl-step">
+        <div class="tl-num">5</div>
+        <div class="tl-card">
+          <div class="icon-box">📜</div>
+          <div class="tl-info">
+            <h3>帳戶餘額變負數</h3>
+            <p>開始透支，帳上出現用款紀錄</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="tl-step">
+        <div class="tl-num">6</div>
+        <div class="tl-card">
+          <div class="icon-box">📊</div>
+          <div class="tl-info">
+            <h3>開始計算利息（只付利息）</h3>
+            <p style="color:var(--amber-text); font-weight:700;">📊 計息中・僅動用部分</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="tl-step">
+        <div class="tl-num">7</div>
+        <div class="tl-card">
+          <div class="icon-box">💰</div>
+          <div class="tl-info">
+            <h3>可隨時還款（隨借隨還）</h3>
+            <p>還多少、少計多少利息</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="tl-step">
+        <div class="tl-num">8</div>
+        <div class="tl-card">
+          <div class="icon-box">✅</div>
+          <div class="tl-info">
+            <h3>額度恢復可再使用</h3>
+            <p>還款後額度立即回復，循環使用</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 深藍扣款提示 Banner (Matching Image 4) -->
+  <div class="navy-info-card">
+    <div class="bank-icon">🏦</div>
+    <div>
+      <h4>與原貸款分開計算利息，每月 21 日扣款</h4>
+      <p>原貸款依原約定繼續還款；透支額度僅在動用時計息（只付利息）</p>
+    </div>
+  </div>
+
+  <!-- 雙欄特色與動用方式 (Matching Image 5) -->
+  <div class="grid-features">
+
+    <!-- 特色卡片 -->
+    <div class="feature-card">
+      <div class="feature-card-header">
+        <span style="font-size:20px;">✨</span>
+        <h3>特色</h3>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon-sq">🔄</div>
+          <span>隨借隨還，可分次動用</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon-sq">%</div>
+          <span>有用才計息，沒用不算利息</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon-sq">📱</div>
+          <span>使用期間只需付利息</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon-sq">🛡️</div>
+          <span>與原本貸款分開計算</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 動用方式卡片 -->
+    <div class="feature-card">
+      <div class="feature-card-header">
+        <span style="font-size:20px;">💳</span>
+        <h3>動用透支額度的方式</h3>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon-sq blue-type">📱</div>
+          <span>透過網路銀行、ATM 動用</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon-sq blue-type">🏦</div>
+          <span>至永豐銀行分行臨櫃提領現金或匯款</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon-sq blue-type">💳</div>
+          <span>直接由永豐帳戶內扣款交易</span>
+        </div>
+      </div>
+
+      <div class="bulb-notice">
+        <span class="bulb-icon">💡</span>
+        <div>
+          建議可先申請<b>約定轉出帳號</b>（可線上申請）。若為 DAWHO 大戶數位帳戶，需先<b>提升帳戶權限</b>（目前需臨櫃）。
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FAQ 卡片 -->
+  <section class="card">
+    <div style="font-family:'Noto Serif TC', serif; font-size:18px; font-weight:900; color:var(--navy); margin-bottom:12px;">
+      ❓ 常見問題
+    </div>
+
+    <div class="faq-item open">
+      <button class="faq-btn" onclick="toggleFaq(this)">沒動用額度會收取任何費用嗎？ <span>－</span></button>
+      <div class="faq-ans">未動用透支額度完全不計息，銀行亦沒有收帳管費；但房貸未結清的房屋、依法規每年須強制投保火險地震險。</div>
+    </div>
+    <div class="faq-item open">
+      <button class="faq-btn" onclick="toggleFaq(this)">透支額度可以隨時還款嗎？ <span>－</span></button>
+      <div class="faq-ans">可以。隨時皆可直接存入資金還款，還款後額度立即恢復，可再次循環使用。</div>
+    </div>
+    <div class="faq-item open">
+      <button class="faq-btn" onclick="toggleFaq(this)">動用資金用途有什麼限制嗎？ <span>－</span></button>
+      <div class="faq-ans">本透支額度嚴禁用於購屋相關用途（如買第二間房或購屋同時修繕）、亦不得用於代償本行原有本息攤還貸款。</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="sticky-footer">
+  <button class="cta-btn" onclick="document.getElementById('calculator').scrollIntoView({behavior:'smooth'})">立即試算我的額度</button>
+</div>
+
+<script>
+const TOTAL = 800;
+let repayVal = 100;
+let usedVal = 30;
+
+const repayRange = document.getElementById('repayRange');
+const usedRange = document.getElementById('usedRange');
+
+function updateUI() {
+  usedRange.max = repayVal;
+  if (usedVal > repayVal) usedVal = repayVal;
+
+  const availVal = repayVal - usedVal;
+  const loanRemain = TOTAL - repayVal;
+
+  document.getElementById('repayText').textContent = repayVal;
+  document.getElementById('usedText').textContent = usedVal;
+  document.getElementById('valLoan').textContent = loanRemain + ' 萬';
+  document.getElementById('valAvailable').textContent = availVal + ' 萬';
+  document.getElementById('valUsed').textContent = usedVal + ' 萬';
+
+  // 計算償還本金後，原房貸每月少繳金額（以30年期、2.5%試算，每萬本金約合 39.51 元/月）
+  const monthlySave = Math.round(repayVal * 39.51);
+  document.getElementById('monthlySaveText').textContent = '-' + monthlySave.toLocaleString() + ' 元/月';
+  document.getElementById('benefitLimitText').textContent = '+' + repayVal + ' 萬元';
+
+  // 修正：使用精確數字比對，避免 "500 萬" 包含 "50" 導致同時亮起的 Bug
+  document.querySelectorAll('.btn-preset').forEach(btn => {
+    const btnVal = parseInt(btn.textContent, 10);
+    btn.classList.toggle('active', btnVal === repayVal);
+  });
+
+  const daily = Math.round((usedVal * 10000 * 0.031) / 365);
+  document.getElementById('dailyInterest').innerHTML = `約 ${daily} 元<span style="font-size:12px;font-weight:normal;">/日</span>`;
+
+  const pLoan = (loanRemain / TOTAL) * 360;
+  const pAvail = (availVal / TOTAL) * 360;
+  const deg1 = pLoan;
+  const deg2 = deg1 + pAvail;
+
+  document.getElementById('pieChart').style.background = 
+    `conic-gradient(#3576E8 0deg ${deg1}deg, #20B2AA ${deg1}deg ${deg2}deg, #E05A47 ${deg2}deg 360deg)`;
+}
+
+function setRepay(val) {
+  repayVal = val;
+  repayRange.value = val;
+  updateUI();
+}
+
+function setDecision(isYes) {
+  document.getElementById('btnDecNo').classList.toggle('active', !isYes);
+  document.getElementById('btnDecYes').classList.toggle('active', isYes);
+
+  const branchNo = document.getElementById('branchNo');
+  const branchYes = document.getElementById('branchYes');
+
+  if (isYes) {
+    branchNo.style.display = 'none';
+    branchYes.style.display = 'block';
+  } else {
+    branchNo.style.display = 'block';
+    branchYes.style.display = 'none';
+  }
+}
+
+function toggleFaq(btn) {
+  const item = btn.parentElement;
+  item.classList.toggle('open');
+  btn.querySelector('span').textContent = item.classList.contains('open') ? '－' : '＋';
+}
+
+repayRange.addEventListener('input', (e) => {
+  repayVal = Number(e.target.value);
+  updateUI();
+});
+
+usedRange.addEventListener('input', (e) => {
+  usedVal = Number(e.target.value);
+  updateUI();
+});
+
+updateUI();
+</script>
+</body>
+</html>
